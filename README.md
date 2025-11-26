@@ -1,1 +1,2 @@
-# MrJack
+# Simulation of a game Mr Jack
+Simulation of a board game called Mr Jack as my thesis project. Both players are played by computers. Game can be simulated in two versions: heuristic gameplay that is played with heuristich rules and gameplay in which both players are making random actions. Both of the versions are done to compare the differences of computational complexity. Excel files contain values of memory and operations required by program to work.   
