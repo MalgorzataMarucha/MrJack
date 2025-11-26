@@ -5,7 +5,9 @@ import random
 import Players.Jack as Jack
 import Players.Detective as Detective
 from mechanics.buildings import Open_Sewer
+import mechanics.skills as skills
 
+#function to teleport between sewers
 def random_sewer_teleport(player, character, remaining_moves, open_sewers, forbidden_positions):
     occupied_positions = {c.position for c in settings.character_list if c != character}
     random.shuffle(open_sewers)
@@ -51,7 +53,7 @@ def random_sewer_teleport(player, character, remaining_moves, open_sewers, forbi
     
     return remaining_moves, character.position
 
-
+#function for basic movement of the characters
 def basic_movement(character, player, mode):
     original_pos = character.position
     remaining_moves = settings.amount_of_rolls
@@ -89,7 +91,7 @@ def basic_movement(character, player, mode):
             settings.operations += 1
         
 
-    
+    #possibility to teleport
     if character.position in open_sewers and remaining_moves >= 1:
         if random.choice([True, False]):
             remaining_moves, new_pos = random_sewer_teleport(player, character, remaining_moves, open_sewers, forbidden_positions)
@@ -115,6 +117,7 @@ def basic_movement(character, player, mode):
     random.shuffle(valid_end_positions)
     if settings.operations:
         settings.operations += len(valid_end_positions)
+    #looking for avaiable position
     for pos, cost in valid_end_positions:
         use_teleport = random.choice([True, False])
         if settings.operations:
@@ -169,6 +172,7 @@ def basic_movement(character, player, mode):
     deck.change_status()
     return character.position
 
+# hiding function for Jack if he cannot get to the goal because of his visibility
 def hiding(character):
     original_pos = character.position
     max_steps = settings.amount_of_rolls
@@ -229,7 +233,7 @@ def hiding(character):
 
     return basic_movement(character, "Jack", "adaptive")
 
-
+# function that makes character go to the exact goal 
 def get_to_your_goal(character, player, goal, steps=None, teleport = True, goodley_skill = False):
     path = map_utils.find_closest_path(character, goal, teleport)
     occupied_positions = {c.position for c in settings.character_list if c != character}
@@ -241,8 +245,9 @@ def get_to_your_goal(character, player, goal, steps=None, teleport = True, goodl
         steps = settings.amount_of_rolls
         if settings.operations:
             settings.operations += 1
-
+     
     if path[0]:
+        #checking if path is made of teleports or not (equal 1 means path without teleport)
         if len(path) == 1:
             while steps > 0:
                 if len(path[0]) - 1 >= steps:
@@ -269,6 +274,7 @@ def get_to_your_goal(character, player, goal, steps=None, teleport = True, goodl
         else:
             while steps > 0:
                 if steps >= len(path[0]):
+                    #checking if sewer to which character wants to teleport is taken
                     if path[1][0] in occupied_positions and (steps - len(path[0]) <= 0):
                         if player == "Detective" and (steps - len(path[0]) == 0) and settings.murderer.position == path[1][0]:
                             target_pos = path[1][0]
@@ -333,34 +339,48 @@ def get_to_your_goal(character, player, goal, steps=None, teleport = True, goodl
     
     return basic_movement(character, player, "adaptive")
 
+#usage of skills depending on character and mode
 def using_characters(player, character, random = False):
     if random:
         if character.name != "Sherlock Holmes":
             player = None
             if settings.operations:
                 settings.operations += 1
-    
-    character.action(player)
+    match character.name:
+        case "Sherlock Holmes":
+            skills.Sherlocks_skill(player)
+        case "John H. Watson":
+            skills.Watsons_skill(player, character)
+        case "John Smith":
+            skills.Smiths_skill(player)
+        case "Inspector Lestrade":
+            skills.Lestrades_skill(player)
+        case "Miss Stealthy":
+            skills.Stealhys_skill()
+        case "Sergeant Goodley":
+            skills.Goodleys_skill(player, character)
+        case "Sir William Gull":
+            skills.Gulls_skill(player, character)
+        case "Jeremy Bert":
+            skills.Berts_skill(player)
+
+    deck.change_status()
+        
     return None
 
-
-
+#execution skill preferences
 def time_to_execute_skill(player, character):
     if player == "Jack":
         return Jack.Jack_activation_skill_preferences(character)
     else:
         return Detective.Detective_activation_skill_preferences(character)
         
-
+#function to execute the movement depending on a player
 def execute_movement(player, character, random = False):
     if player == "Jack":
         Jack.Jack_movement(character, random)
     else:     
         Detective.Detective_movement(character, random)
-
-    #print(f"Round {settings.round_number}: {player} moves with {character.name}")
-    
-
     
     deck.change_status()
 
@@ -374,7 +394,7 @@ def execute_movement(player, character, random = False):
     return None
 
 
-
+#function that check if game finished in any way
 def finish_of_game(round, caught):
     if caught:
         return "Detective caught Jack. Detective wins!"

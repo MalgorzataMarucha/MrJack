@@ -5,6 +5,7 @@ import settings
 import heapq
 from mechanics.buildings import Police_Cordon, Open_Sewer, Lantern_Off, Lantern
 
+# function to get all neighbour hexes around pos
 def get_neighbors(pos, hex_set, distance = 1):
     directions = [(+distance, 0), (+distance, -distance), (0, -distance), (-distance, 0), (-distance, +distance), (0, +distance)]
     neighbors = [(pos[0] + dq, pos[1] + dr) for dq, dr in directions]
@@ -12,11 +13,13 @@ def get_neighbors(pos, hex_set, distance = 1):
         settings.operations += 1 + len(directions)
     return [n for n in neighbors if map.Hex(n[0], n[1], -n[0]-n[1]) in hex_set]
 
+#counting the distance between given points
 def hex_distance(a, b):
     if settings.operations:
         settings.operations += 1
     return max(abs(a[0] - b[0]), abs(a[1] - b[1]), abs((-a[0]-a[1]) - (-b[0]-b[1])))
 
+#lookinf for the closest avaiable escape hex
 def find_closest_escape_hex(character):
     start = character.position
     blocked = {b.position for b in settings.building_list if isinstance(b, Police_Cordon)}
@@ -26,6 +29,7 @@ def find_closest_escape_hex(character):
         settings.operations += 1 + len(settings.building_list)+ len(settings.get_out_hex) + len(escape_hexes) * np.log2(len(escape_hexes))
     return sorted_escape_hexes
 
+#looking for closest building type
 def find_closest_building(position, type_of_building):
     buildings_positions = [b.position for b in settings.building_list if isinstance(b, type_of_building)]
     sorted_buildings = sorted(buildings_positions, key=lambda h: hex_distance(position, h))
@@ -33,6 +37,7 @@ def find_closest_building(position, type_of_building):
         settings.operations += len(settings.building_list) + len(buildings_positions) * np.log2(len(buildings_positions))
     return sorted_buildings
 
+#looking for closest characters 
 def find_closest_character(character = None, reversed = False, building_pos = None):
     if character:
         occupied_positions = [c.position for c in settings.character_list if character and c != character]
@@ -60,6 +65,7 @@ def find_closest_character(character = None, reversed = False, building_pos = No
                 
     return sorted_characters
 
+#BFS algorithm - function looks for all accessible hexes that can be walked to
 def get_accessible_hexes(character, player, hex_map, max_steps, buildings, forbidden_positions):
     visited = set()
     queue = deque()
@@ -123,6 +129,7 @@ def get_accessible_hexes(character, player, hex_map, max_steps, buildings, forbi
 
     return accessible
 
+# flitrating all hexes position through the ones that are not possible to be stepped on
 def get_valid_end_positions(player, character, hexes_with_costs, occupied_positions, forbidden_positions, buildings, allow_shared_sewers=False, remaining_moves=0):
     import mechanics.deck as deck
     valid_positions = []
@@ -166,6 +173,7 @@ def get_valid_end_positions(player, character, hexes_with_costs, occupied_positi
 
     return valid_positions
 
+#a star algorithm to find the shortest path to the goal
 def a_star(start, goal, impassable_positions, hex_set):
     open_set = []
     heapq.heappush(open_set, (0, start))
@@ -212,6 +220,7 @@ def a_star(start, goal, impassable_positions, hex_set):
 
     return None
 
+#looking for shortest path (considering teleports and no teleports)
 def find_closest_path(character, goal, teleport=True):
     
     start = character.position
@@ -221,10 +230,10 @@ def find_closest_path(character, goal, teleport=True):
 
     open_sewers = [b.position for b in settings.building_list if isinstance(b, Open_Sewer)]
 
-    normal_path = a_star(start, goal, impassable, settings.hex_map)
+    normal_path = a_star(start, goal, impassable, settings.hex_set)
     normal_cost = len(normal_path) if normal_path else float('inf')
     if settings.operations:
-        settings.operations += 2 + 2* len(settings.building_list) + len(settings.hex_map) + len(path)
+        settings.operations += 2 + 2* len(settings.building_list) + len(path)
 
     if teleport:
         best_teleport_cost = float('inf')
@@ -233,7 +242,7 @@ def find_closest_path(character, goal, teleport=True):
         if settings.operations:
             settings.operations += 3
         for entry_sewer in open_sewers:
-            path_to_entry = a_star(start, entry_sewer, impassable, settings.hex_map)
+            path_to_entry = a_star(start, entry_sewer, impassable, settings.hex_set)
             if settings.operations:
                 settings.operations += 1
             if not path_to_entry:
@@ -245,7 +254,7 @@ def find_closest_path(character, goal, teleport=True):
                 if exit_sewer == entry_sewer:
                     continue
                 
-                path_from_exit = a_star(exit_sewer, goal, impassable, settings.hex_map)
+                path_from_exit = a_star(exit_sewer, goal, impassable, settings.hex_set)
                 if not path_from_exit:
                     continue
 
@@ -276,51 +285,39 @@ def find_closest_path(character, goal, teleport=True):
 
     return path
 
-def find_path(watson_position, neighbors, hex_set, building_list, target_condition=None, fallback=False):
+#function that is creating path of light for watsons lamp
+def find_path(watson, neighbors, hex_set, building_list, target_condition=None, fallback=False):
     for neighbor in neighbors:
-        dq = neighbor[0] - watson_position[0]
-        dr = neighbor[1] - watson_position[1]
+        dq = neighbor[0] - watson.position[0]
+        dr = neighbor[1] - watson.position[1]
 
         current_q, current_r = neighbor
         current_path = []
-        if settings.operations:
-            settings.operations += 5
 
         while True:
             current_hex = map.Hex(current_q, current_r, -current_q - current_r)
-            if settings.operations:
-                settings.operations += 1
             if current_hex not in hex_set:
                 break
 
             blocking = next((b for b in building_list
                              if b.position == (current_q, current_r) and not b.passable), None)
-            
-            if settings.operations:
-                settings.operations += len(building_list)
 
             if blocking:
                 break
 
             if (target_condition and target_condition((current_q, current_r))) or fallback:
                 current_path.append((current_q, current_r))
-                if settings.operations:
-                    settings.operations += 1
 
             current_q += dq
             current_r += dr
-            if settings.operations:
-                settings.operations += 2
 
         if current_path:
-            settings.Watsons_lamp_path.clear()
-            settings.Watsons_lamp_path.append(current_path)
-            if settings.operations:
-                settings.operations += len(settings.Watsons_lamp_path) + 1
+            watson.lamp_path = current_path  
             return (current_path, (dq, dr))
     
     return ([], None)
 
+#function that looks for buildings of given type position
 def find_building(building_type, positions, multiple=True):
     if not isinstance(positions, (list, set, tuple)):
         positions = [positions]
@@ -333,12 +330,17 @@ def find_building(building_type, positions, multiple=True):
     else:
         return next((b for b in settings.building_list if isinstance(b, building_type) and b.position == positions), None)
 
+#function that is preparing for turning off in the game
 def prepare_lanterns():
     for hex in settings.get_out_hex:
         lamp = find_closest_building(hex, Lantern)
         settings.lamps_to_turn_off.append(lamp[0])
+    settings.hex_set = set(settings.hex_map)
+    if settings.operations:
+            settings.operations += len(settings.hex_set)
+    
         
-
+#functions that is turning of the lanterns in the game
 def lanterns_off(round):
     if round <= len(settings.lamps_to_turn_off):
         pos = settings.lamps_to_turn_off[round - 1]

@@ -4,15 +4,11 @@ import settings
 
 
 used_names = set()
-
-
 suspect_list = set()
 
-
-
+#function to create suspect list at the beginning of the game    
 def create_suspect_list():
     global suspect_list
-    suspect_list = set()
     suspect_list.clear()
     if settings.operations:
         settings.operations += 1
@@ -22,6 +18,7 @@ def create_suspect_list():
             settings.operations += 2
     return suspect_list
 
+#function to update suspect list
 def update_suspect_list():
     to_remove = set()
     
@@ -38,63 +35,65 @@ def update_suspect_list():
     
     return suspect_list
 
+#function to check visibility of Jack
 def is_Jack_visible():
     settings.Jack_visibility = settings.murderer.visible
     if settings.operations:
         settings.operations += 1
     return None
 
+#function to check and change statuses of all characters on a map
 def change_status():
     for char in settings.character_list:
         char.visible = False
         if settings.operations:
             settings.operations += 1
 
-    
     lamp_positions = {b.position for b in settings.building_list if b.revealing}
     occupied_positions = {c.position for c in settings.character_list}
     if settings.operations:
         settings.operations += len(settings.building_list) + len(settings.character_list)
 
     for char in settings.character_list:
-        neighbors = map_utils.get_neighbors(char.position, settings.hex_map)
+        neighbors = map_utils.get_neighbors(char.position, settings.hex_set)
         if settings.operations:
-                settings.operations += 1
+            settings.operations += 1
 
-        if (len(settings.Watsons_lamp_path) == 1 and char.position in settings.Watsons_lamp_path[0]):
-            char.visible = True
-            if settings.operations:
-                settings.operations += 1
+        for watson in (c for c in settings.character_list if c.name == "John H. Watson"):
+            if char.position in getattr(watson, "lamp_path", []):
+                char.visible = True
+                if settings.operations:
+                    settings.operations += 1
+                break  
+
         if any(pos in lamp_positions for pos in neighbors) or \
            any(pos in occupied_positions - {char.position} for pos in neighbors):
             char.visible = True    
             if settings.operations:
                 settings.operations += 1
 
+# function to choose a murderer at the beginning of the game
 def choose_murderer(characters):
     chosen = random.choice(characters)
-    
-    #for char in characters:
-    #    if char.name == "Sherlock Holmes":
-    #        chosen = char
     settings.murderer = chosen
     settings.taken_cards.append(chosen)
     if settings.operations:
         settings.operations += 3
     return chosen.name
 
+# function to split characters equally between two groups (even and odd round)
 def initialize_groups():
     chars_copy = settings.character_list.copy()
     n = len(chars_copy)
-    split = n // 2  # dzielimy na pół
+    split = n // 2  
     settings.group_a = random.sample(chars_copy, split)
     settings.group_b = [c for c in chars_copy if c not in settings.group_a]
     if settings.operations:
         settings.operations += len(settings.character_list)+ 2 +split + len(chars_copy)
 
-
-def choose_random_character(characters):
-    available_chars = [c for c in characters if c.name not in used_names]
+#function that choose a random character to play from a given group 
+def choose_random_character(characters, player):
+    available_chars = [c for c in characters if c not in used_names]
     if settings.operations:
         settings.operations += len(characters)
     if not available_chars:
@@ -102,22 +101,21 @@ def choose_random_character(characters):
         available_chars = characters.copy()
         if settings.operations:
             settings.operations += len(used_names) + len(characters)
-    chosen = random.choice(available_chars)
-    #Lestrade = next(c for c in settings.character_list if isinstance(c, Sir_William_Gull))
-    #if not Jack and Lestrade in available_chars:
-    #    chosen = Lestrade
-    used_names.add(chosen.name)
+    if not settings.random_game and player == "Jack" and settings.murderer in available_chars:
+        chosen = settings.murderer
+    else:
+        chosen = random.choice(available_chars)
+    used_names.add(chosen)
     if settings.operations:
         settings.operations += 2
     return chosen
 
-
+#function that is choosing a group to play and a character, checks queues of turns
 def choose_char(round):
-
     if round % 2 == 1 and not settings.group_a and not settings.group_b:
         used_names.clear()
         if settings.operations:
-            settings.operations += len(used_names)
+            settings.operations += len(settings.character_list)
         initialize_groups()
 
     if round % 2 == 1:
@@ -144,7 +142,7 @@ def choose_char(round):
         settings.operations += 1
     
 
-    chosen_character = choose_random_character(available_characters)
+    chosen_character = choose_random_character(available_characters, current_player)
 
 
     move_info = {
@@ -155,26 +153,11 @@ def choose_char(round):
 
     if settings.operations:
         settings.operations += 1
-
-    if not settings.current_turn_queue:
-        if round % 2 == 0:
-            if settings.operations:
-                settings.operations += len(used_names) + len(settings.group_a) + len(settings.group_b)
-        
-            used_names.clear()
-            settings.group_a.clear()
-            settings.group_b.clear()
-
             
-    return round, move_info
-
-def check_if_caught(character):
-    murderer = settings.murderer
-    if settings.operations:
-        settings.operations += 1
+    if len(used_names) == len(settings.character_list):
+        settings.group_a.clear()
+        settings.group_b.clear()
+        if settings.operations:
+            settings.operations += len(settings.character_list)
         
-    if character == murderer:
-        return False  
-
-    neighbors = map_utils.get_neighbors(character.position, settings.hex_map)
-    return murderer.position in neighbors
+    return round, move_info

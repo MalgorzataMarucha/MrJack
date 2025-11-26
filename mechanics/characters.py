@@ -1,11 +1,12 @@
 import pygame
 import mechanics.map as map
-import mechanics.skills as skills
+
 class Character:
-    def __init__(self, position, name, color, visible = True):
+    def __init__(self, position, name, color, skill_before = False, skill_anytime = False, visible = True):
         self.position = position
         self.name = name
         self.color = color
+        self.skill_anytime = skill_anytime
         self.visible = visible
 
     def draw(self, surface, pos, color):
@@ -13,61 +14,62 @@ class Character:
         pygame.draw.circle(surface, color, pos, size)
         pygame.draw.circle(surface, (0, 0, 0), pos, size,3)
 
-    def action(self, player):
+    def action(self):
         raise NotImplementedError("Subclasses must implement this method")
     
 class Sherlock_Holmes(Character):
     def __init__(self, position, name, color):
-         super().__init__(position, name, color, visible = True)
+         super().__init__(position, name, color, skill_before = False, skill_anytime = False, visible = True)
 
-    def action(self, player):
-        return skills.Sherlocks_skill(player)
+    def action(self):
+        return "Sherlock Holmes"
     
 class John_H_Watson(Character):
     def __init__(self, position, name, color):
-         super().__init__(position, name, color, visible = False)
+         super().__init__(position, name, color, skill_before = False, skill_anytime = False, visible = False)
+         self.lamp_path = []
 
-    def action(self, player):
-        return skills.Watsons_skill(player, self)
+    def action(self):
+        return "John H. Watson"
     
 class John_Smith(Character):
     def __init__(self, position, name, color):
-         super().__init__(position, name, color, visible = True)
+         super().__init__(position, name, color, skill_before = False, skill_anytime = True, visible = True)
 
-    def action(self, player):
-        return skills.Smiths_skill(player)
+    def action(self):
+        return "John Smith"
     
 class Inspector_Lestrade(Character):
     def __init__(self, position, name, color):
-         super().__init__(position, name, color, visible = True)
+         super().__init__(position, name, color, skill_before = False, skill_anytime = True, visible = True)
 
-    def action(self, player):
-        return skills.Lestrades_skill(player)
+    def action(self):
+        return "Inspector Lestrade"
 
 class Miss_Stealthy(Character):
     def __init__(self, position, name, color):
-         super().__init__(position, name, color, visible = False)
+         super().__init__(position, name, color, skill_before = True, skill_anytime = True, visible = False)
 
-    def action(self, player):
-        return skills.Stealhys_skill()
+    def action(self):
+        return "Miss Stealthy"
     
 class Sergeant_Goodley(Character):
     def __init__(self, position, name, color):
-         super().__init__(position, name, color,  visible = False)
+         super().__init__(position, name, color, skill_before = False, skill_anytime = True, visible = False)
 
-    def action(self, player):
-        return skills.Goodleys_skill(player)
+    def action(self):
+        return "Sergeant Goodley"
 
 class Sir_William_Gull(Character):
     def __init__(self, position, name, color):
-         super().__init__(position, name, color, visible = False)
+         super().__init__(position, name, color, skill_before = True, skill_anytime = True, visible = False)
 
-    def action(self, player):
-        return skills.Gulls_skill(player, self)
+    def action(self):
+        return "Sir William Gull"
 
 class Jeremy_Bert(Character):
     def __init__(self, position, name, color):
-         super().__init__(position, name, color,  visible = True)
+         super().__init__(position, name, color, skill_before = False, skill_anytime = True, visible = True)
 
-    def action(self, player):
-        return skills.Berts_skill(player)
+    def action(self):
+        return "Jeremy Bert"

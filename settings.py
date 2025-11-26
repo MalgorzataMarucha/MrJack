@@ -8,14 +8,14 @@ import mechanics.characters as characters
 building_list = []
 character_list = []
 max_rounds = 8
-
-odd_round = ["Detective", "Jack", "Jack", "Detective"]
-even_round = ["Jack", "Detective", "Detective", "Jack"]
+odd_round = []
+even_round = []
 
 get_out_hex = []
 
 operations = 1
 hex_map = []
+hex_set=[]
 
 round_number = 1
 current_turn_queue = []
@@ -36,6 +36,7 @@ lamps_to_turn_off = []
 
 
 amount_of_rolls = 3
+number_of_things= None
 
 def init_col_row_hex():
     return [
@@ -55,7 +56,7 @@ def init_col_row_hex():
     ]
 
 col_row_hex = init_col_row_hex()
-
+random_game = False
 def init_building_list():
     return [
         buildings.Apartaments((0, 1)),
@@ -117,13 +118,16 @@ def reset(amount = 0):
     global amount_of_rolls, move_stage, Jack_visibility, group_a, group_b
     global murderer, character_list, current_turn_queue, Watsons_lamp_path
     global get_out_hex, building_list, hex_map, taken_cards, lamps_to_turn_off
-    global hex_map
+    global number_of_things, hex_map, hex_set, odd_round, even_round
 
     operations = 1
     deck.suspect_list.clear()
+    odd_round = ["Detective", "Jack", "Jack", "Detective"]
+    even_round = ["Jack", "Detective", "Detective", "Jack"]
     building_list = init_building_list()
     character_list = init_char_list()
     hex_map = map.hex_map_generator(col_row_hex, operations)
+    hex_set = []
 
     get_out_hex = [
         (0, col_row_hex[0][0]),
@@ -132,6 +136,11 @@ def reset(amount = 0):
         (len(col_row_hex) - 1,col_row_hex[-1][1]-1)
     ]
 
+    
+    
+    
+
+    
     
     round_number = 1
     current_turn_queue = []
@@ -147,8 +156,11 @@ def reset(amount = 0):
     already_used_skill = False
     who_caught = False
     caught = False
+    amount_of_rolls = 3
     move_stage = 0
     taken_cards = []
     lamps_to_turn_off = []
+
+    amount_of_rolls = 3
     
-    
+    number_of_things = len(building_list) + len(character_list) + len(lamps_to_turn_off) + 17 + len(hex_map)

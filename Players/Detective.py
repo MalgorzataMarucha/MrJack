@@ -3,6 +3,7 @@ import mechanics.map_utils as map_utils
 import mechanics.actions as actions
 import settings
 
+#function that is deciding time of using skills for Detective
 def Detective_activation_skill_preferences(character):
     before_movement = ["Miss Stealthy", "Sir William Gull", "Jeremy Bert"]
     if settings.operations:
@@ -11,6 +12,7 @@ def Detective_activation_skill_preferences(character):
         return 2
     return 1
 
+#characters movement by Detective
 def Detective_movement(character, random = False):
     if settings.operations:
                 settings.operations += 1

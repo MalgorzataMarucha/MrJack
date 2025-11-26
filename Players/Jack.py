@@ -3,14 +3,23 @@ import mechanics.map_utils as map_utils
 import mechanics.actions as actions
 import mechanics.deck as deck
 
+hex_set = set(settings.hex_map)  
 
+#function that tries to get to the goal while fitting to the preferred visibility
 def Jack_smart_movement(character):
-    goal = map_utils.find_closest_escape_hex(character)[0]
-    path = map_utils.find_closest_path(character, goal)
+    goals = map_utils.find_closest_escape_hex(character)
+    for goal in goals:
+        path = map_utils.find_closest_path(character, goal)
+        if path[0]:
+            break
+
+    if path[0] is None:
+        total_path_len = 0
+    else:
+        total_path_len = len(path[0]) + len(path[1]) - 1 if len(path) > 1 else len(path[0])
 
     visible_chars = {c for c in deck.suspect_list if c.visible}
     invisible_chars = {c for c in deck.suspect_list if not c.visible}
-    total_path_len = len(path[0]) + len(path[1]) - 1 if len(path) > 1 else len(path[0])
 
     original_pos = character.position
     steps = settings.amount_of_rolls
@@ -59,7 +68,10 @@ def Jack_smart_movement(character):
 
         if steps - 1 == 0 and len(path) != 1:
             path = map_utils.find_closest_path(character, goal, False)
-            total_path_len = len(path[0]) + len(path[1]) if len(path) > 1 else len(path[0])
+            if path[0]:
+                total_path_len = len(path[0]) + len(path[1]) if len(path) > 1 else len(path[0])
+            else:
+                break
             steps = settings.amount_of_rolls
             allow_tp = False
             if settings.operations:
@@ -75,6 +87,7 @@ def Jack_smart_movement(character):
         settings.operations += 2
     return character.position
 
+#Jack activation skill time preference
 def Jack_activation_skill_preferences(character):
     before_movement = ["Inspector Lestrade", "Miss Stealthy", "Sir William Gull", "Jeremy Bert"]
     if settings.operations:
@@ -83,7 +96,7 @@ def Jack_activation_skill_preferences(character):
         return 2
     return 1
 
-
+#movement of characters played by Jack
 def Jack_movement(character, random = False):
     if settings.operations:
         settings.operations += 1

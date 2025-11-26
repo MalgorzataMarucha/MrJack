@@ -6,6 +6,7 @@ color_of_hex = (192, 192, 192)
 color_of_hex_outline = (0, 0, 0)
 color_of_hex_outline_get_out = (255, 0, 0)
 
+
 class Hex:
     def __init__(self, q, r, s):
         self.q = q
@@ -55,6 +56,7 @@ class Hex:
         else:
             pygame.draw.polygon(surface, color_of_hex_outline_get_out, corners, 3)
 
+#function that generates the map
 def hex_map_generator(col_row_hex, operations = None):
     hexes = []
     if operations:

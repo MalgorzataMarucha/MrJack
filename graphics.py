@@ -3,7 +3,7 @@ import mechanics.buildings as buildings
 import graphics
 import settings
 
-
+#initializing the graphics
 def init_graphics():
     global screen, background, background_base, font
     global icon_map, last_move_text, last_move_color
@@ -32,6 +32,7 @@ def init_graphics():
 def get_icon_for_building(building_obj):
     return icon_map.get(type(building_obj), None)
 
+#drawing all elements on the screen
 def draw_everything():
     global offset_x, offset_y
     graphics.screen.blit(graphics.background, (0, 0))
@@ -79,7 +80,7 @@ def draw_everything():
         if (hex.q, hex.r) in settings.get_out_hex:
             hex.draw(graphics.screen, offset_x, offset_y, 2)
 
-
+#drawing a box with actions informations
 def display_move_info(screen, font, text, text_color, background_color=(0, 0, 0, 180), padding=10):
     if not text:
         return
@@ -100,6 +101,7 @@ def display_move_info(screen, font, text, text_color, background_color=(0, 0, 0,
     screen.blit(bg_surface, bg_rect.topleft)
     screen.blit(text_surface, text_rect)
 
+#display box with murder information
 def display_murderer_info(screen, font, murderer_name,round_number, text_color, bg_color=(0, 0, 0), padding=10, spacing=5):
     if not murderer_name:
         return
@@ -121,7 +123,7 @@ def display_murderer_info(screen, font, murderer_name,round_number, text_color, 
     screen.blit(murderer_surface, (bg_rect.left + padding, bg_rect.top + padding + round_surface.get_height() + spacing))
 
 
-
+#display box with suspect list
 def draw_suspect_list(screen, font, suspects, margin=20, text_color=(255,255,255), bg_color=(0, 0, 0), padding=10, spacing=5):
     if not suspects:
         return

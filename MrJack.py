@@ -7,31 +7,25 @@ import mechanics.map_utils as map_utils
 import mechanics.map_switch as map_switch
 import mechanics.map as map
 import time
-import gc
-amount = 2
-if amount:
-     map.size_of_hex = map.size_of_hex *1/amount
+
+amount = 0 #amount of increase of the map 
+#map.size_of_hex = map.size_of_hex *4/5
 map_switch.increase_the_map(settings.col_row_hex, amount)
 settings.reset(amount)
+map_switch.change_char_list(amount=8, character_list=settings.character_list)
 map_switch.prepare_the_map(amount, settings.building_list, settings.character_list, settings.get_out_hex)
-map_switch.prepare_buildings(amount, settings.building_list, settings.character_list, settings.get_out_hex, settings.hex_map)
+map_switch.prepare_buildings(amount, settings.building_list, settings.character_list, settings.get_out_hex, settings.hex_map, build_to_skip=None)
 graphics.init_graphics()
 map_utils.prepare_lanterns()
 deck.choose_murderer(settings.character_list)   
 deck.create_suspect_list()
 
-
-
-last_move_time = time.time()
-
 buildings_with_icons = [
     (b, graphics.get_icon_for_building(b)) for b in settings.building_list
 ]
 running = True
- 
 
 while running:
-
     graphics.draw_everything() 
 
     for event in pygame.event.get():
@@ -41,9 +35,8 @@ while running:
             graphics.screen = pygame.display.set_mode((event.w, event.h), pygame.RESIZABLE)
             graphics.background = pygame.transform.scale(graphics.background_base, (event.w, event.h))
         elif event.type == pygame.KEYDOWN:
-            if event.key == pygame.K_SPACE:
+            if event.key == pygame.K_SPACE: 
                 if actions.finish_of_game(settings.round_number, settings.caught) == None:
-                    gc.collect()
                     if settings.move_stage == 0:
                         settings.already_moved = False
                         settings.already_used_skill = False
@@ -68,15 +61,13 @@ while running:
                         else:
                             settings.move_stage = 1
                         
-                        
-                    if settings.ready_for_next_round and settings.already_used_skill:
+                    if settings.ready_for_next_round and settings.already_used_skill and settings.already_moved:
                         settings.round_number += 1 
                         deck.is_Jack_visible()
                         deck.update_suspect_list()
                         settings.ready_for_next_round = False
                 else:
                     graphics.last_move_text = actions.finish_of_game(settings.round_number, settings.caught)
-                    print(settings.operations)
                     graphics.last_move_color = (255, 255, 255)
                     settings.move_stage = 2
 
@@ -84,7 +75,7 @@ while running:
     graphics.display_murderer_info(graphics.screen, graphics.font, settings.murderer.name, settings.round_number, settings.murderer.color)
     graphics.draw_suspect_list(graphics.screen, graphics.font, deck.suspect_list)
 
-    pygame.display.flip()
+    pygame.display.flip()   
 
-pygame.quit()
+pygame.quit() 
  

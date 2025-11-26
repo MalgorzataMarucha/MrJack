@@ -30,7 +30,7 @@ def Sherlocks_skill(player):
 
 
 def Watsons_skill(player, watson):
-    neighbors = map_utils.get_neighbors(watson.position, settings.hex_map)
+    neighbors = map_utils.get_neighbors(watson.position, settings.hex_set)
 
     visible_chars = {c for c in deck.suspect_list if c.visible}
     invisible_chars = {c for c in deck.suspect_list if not c.visible}
@@ -38,7 +38,7 @@ def Watsons_skill(player, watson):
     chosen_path = []
 
     if settings.operations:
-        settings.operations += len(deck.suspect_list)*2 + 2
+        settings.operations +=  len(deck.suspect_list)*2 + 2
 
     match player:
         case "Jack":
@@ -46,8 +46,8 @@ def Watsons_skill(player, watson):
             # Watson tries to light up a place where is an invisible suspect
             if settings.murderer.visible and len(visible_chars) >= len(invisible_chars):
                 #print("Case 1")
-                chosen_path = map_utils.find_path(
-                    watson.position, neighbors, settings.hex_map, settings.building_list,
+                chosen_path, chosen_direction = map_utils.find_path(
+                    watson, neighbors, settings.hex_set, settings.building_list,
                     lambda pos: any(c.position == pos for c in invisible_chars)
                 )
 
@@ -55,16 +55,16 @@ def Watsons_skill(player, watson):
             # Watson tries to make murderer visible 
             elif not settings.murderer.visible and len(visible_chars) > len(invisible_chars):
                 #print("Case 2")
-                chosen_path = map_utils.find_path(
-                    watson.position, neighbors, settings.hex_map, settings.building_list,
+                chosen_path, chosen_direction = map_utils.find_path(
+                    watson, neighbors, settings.hex_set, settings.building_list,
                     lambda pos: settings.murderer.position == pos
                 )
 
                 if not chosen_path:
                     #print("Case 2 - other")
                     #if it's not possible - he tries to put a light in a line without invisible suspects
-                    chosen_path = map_utils.find_path(
-                        watson.position, neighbors, settings.hex_map, settings.building_list,
+                    chosen_path, chosen_direction = map_utils.find_path(
+                        watson, neighbors, settings.hex_set, settings.building_list,
                         lambda pos: all(c.position != pos for c in invisible_chars)
                     )
 
@@ -72,8 +72,8 @@ def Watsons_skill(player, watson):
             # Watson tries to not light up invisible characters in the suspect list
             elif len(deck.suspect_list) <= 1 or len(visible_chars) <= len(invisible_chars):
                 #print("Case 3")
-                chosen_path = map_utils.find_path(
-                    watson.position, neighbors, settings.hex_map, settings.building_list,
+                chosen_path, chosen_direction = map_utils.find_path(
+                    watson, neighbors, settings.hex_set, settings.building_list,
                     lambda pos: all(c.position != pos for c in invisible_chars)
                 )
                 
@@ -81,15 +81,15 @@ def Watsons_skill(player, watson):
             # Option 1: Murderer is known
             # Watson tries to put a light where murderer is
             if len(deck.suspect_list) == 1:
-                chosen_path = map_utils.find_path(
-                    watson.position, neighbors, settings.hex_map, settings.building_list,
+                chosen_path, chosen_direction = map_utils.find_path(
+                    watson, neighbors, settings.hex_set, settings.building_list,
                     lambda pos: settings.murderer.position == pos
                 )
             # Option 2: There are more invisibile or the same amount of invisible suspects
             # Watson will try to make any invisible suspect into a visible one
             elif len(visible_chars) <= len(invisible_chars):
-                chosen_path = map_utils.find_path(
-                    watson.position, neighbors, settings.hex_map, settings.building_list,
+                chosen_path, chosen_direction = map_utils.find_path(
+                    watson, neighbors, settings.hex_set, settings.building_list,
                     lambda pos: any(c.position == pos for c in invisible_chars)
                 )
         case _:
@@ -99,8 +99,8 @@ def Watsons_skill(player, watson):
     # Fallback — if there is no path done
     # Watson will choose a random path to light up
     if not chosen_path:
-        chosen_path = map_utils.find_path(
-            watson.position, neighbors, settings.hex_map, settings.building_list,
+        chosen_path, chosen_direction = map_utils.find_path(
+            watson, neighbors, settings.hex_set, settings.building_list,
             fallback=True
         )
 
@@ -123,7 +123,7 @@ def Watsons_skill(player, watson):
 def Smiths_skill(player):
     visible_chars = {c for c in deck.suspect_list if c.visible}
     invisible_chars = {c for c in deck.suspect_list if not c.visible}
-    neighbors = map_utils.get_neighbors(settings.murderer.position, settings.hex_map)
+    neighbors = map_utils.get_neighbors(settings.murderer.position, settings.hex_set)
     goal = map_utils.find_closest_escape_hex(settings.murderer)[0]
     sorted_lanterns = map_utils.find_closest_building(goal, Lantern)
     lanterns_off = map_utils.find_closest_building(goal, Lantern_Off)
@@ -184,14 +184,14 @@ def Smiths_skill(player):
                     for pos in lanterns_off:
                         if settings.operations:
                             settings.operations +=1 
-                        neighbors_lantern = map_utils.get_neighbors(pos, settings.hex_map)
+                        neighbors_lantern = map_utils.get_neighbors(pos, settings.hex_set)
                         if any(p.position in neighbors_lantern for p in invisible_chars):
                             off_building = map_utils.find_building(Lantern_Off, pos, multiple=False)
                             break
                     for pos in sorted_lanterns:
                         if settings.operations:
                             settings.operations +=1 
-                        neighbors_lantern = map_utils.get_neighbors(pos, settings.hex_map)
+                        neighbors_lantern = map_utils.get_neighbors(pos, settings.hex_set)
                         if not any(p.position in neighbors_lantern for p in visible_chars):
                             on_building = map_utils.find_building(Lantern, pos, multiple=False)
                             break
@@ -210,11 +210,11 @@ def Smiths_skill(player):
     on_pos = on_building.position
     off_pos = off_building.position
 
-    settings.building_list.remove(on_building)
-    settings.building_list.append(Lantern_Off(on_pos))
+    index = settings.building_list.index(on_building)
+    settings.building_list[index].position = off_pos
 
-    settings.building_list.remove(off_building)
-    settings.building_list.append(Lantern(off_pos))
+    index = settings.building_list.index(off_building)
+    settings.building_list[index].position = on_pos
 
     if settings.operations:
         settings.operations += 4 + len(settings.building_list)*2
@@ -264,9 +264,8 @@ def Lestrades_skill(player):
                 settings.operations +=1 
 
 
-    
-    settings.building_list.remove(cordon_building)
-    settings.building_list.append(Police_Cordon(escape_pos))
+    index = settings.building_list.index(cordon_building)
+    settings.building_list[index].position = escape_pos
     if settings.operations:
         settings.operations +=1 + len(settings.building_list)
 
@@ -371,11 +370,10 @@ def loop_for_Goodleys_skill(characters, steps_remaining, Goodley, target_visibil
 
     return steps_remaining
 
-def Goodleys_skill(player):
+def Goodleys_skill(player, Goodley):
     visible_chars = {c for c in deck.suspect_list if c.visible}
     invisible_chars = {c for c in deck.suspect_list if not c.visible}
     steps_remaining = settings.amount_of_rolls
-    Goodley = next((c for c in settings.character_list if c.name == "Sergeant Goodley"), None)
     if settings.operations:
         settings.operations +=1 + len(deck.suspect_list)*2 + len(settings.character_list)
 

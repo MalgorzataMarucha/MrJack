@@ -17,7 +17,7 @@ class Building:
         scaled_icon = pygame.transform.smoothscale(icon, (hex_width, hex_height))
 
         overlay = pygame.Surface((hex_width, hex_height), pygame.SRCALPHA)
-        overlay.fill((255, 255, 255, 15))  # alpha np. 100
+        overlay.fill((255, 255, 255, 15)) 
 
         scaled_icon.blit(overlay, (0, 0))
 
