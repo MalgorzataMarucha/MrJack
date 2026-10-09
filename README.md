@@ -1,6 +1,21 @@
 # Simulation of a game Mr Jack
-Simulation of a board game called Mr Jack as my thesis project. Both players are played by computers. Game can be simulated in two versions: heuristic gameplay that is played with heuristich rules and gameplay in which both players are making random actions. Both of the versions are done to compare the differences of computational complexity. Excel files contain values of memory and operations required by program to work. 
-MrJack file is done for visual purpose of the game so the user can follow the gameplay by pressing spacebar for every further action done (it's easier to follow the map and it's changes). Simulation file is done for measuring computational complexity of a game.
+An engineering thesis project implementing a simulation of the board game **Mr. Jack**, where both players are controlled by computer algorithms. The project evaluates and compares the computational complexity, memory usage, and performance between heuristic-based decision-making and random gameplay.
+
+## Project Overview & Architecture
+The project consists of two core components designed for different purposes:
+- **Simulation Module**: Runs automated games without graphical rendering to measure computational complexity. It records execution metrics, memory consumption, and operation counts, exporting the results to Excel files for performance analysis.
+- **Visual Module**: Provides a graphical interface allowing users to step through the gameplay interactively by pressing the spacebar, making it easy to observe map states, character positions, and turn-by-turn changes.
+
+## Gameplay Modes
+- **Heuristic Gameplay**: Players utilize logical heuristic rules to make optimal or near-optimal moves.
+- **Random Gameplay**: Players execute completely random actions. 
+- **Comparative Analysis**: Designed to contrast the computational overhead, resource usage, and complexity differences between intelligent heuristic choices and random actions.
+
+## Technologies Used
+- **Language**: Python
+- **Data Export**: Excel spreadsheets for metrics tracking (memory and operation counts)
+- **Visualization**: PyGame
+  
 Example look of the board:
 <img width="1625" height="916" alt="image" src="https://github.com/user-attachments/assets/d49457d1-2e59-4eca-bb47-e1d67762436c" />
 
